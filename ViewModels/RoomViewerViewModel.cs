@@ -8,24 +8,19 @@ public class RoomViewerViewModel
     /*
      * We don't use the observable collection for the room viewer, as it works a slightly different way
      * We want to return a list that we can split up a bit to show the rooms floor by floor
-     * It's not the only way to do this, but it's a different way I wanted to explore     * 
+     * It's not the only way to do this, but it's a different way I wanted to explore      
      */
 
-    //BUG: this is being called multiple times when the datepicker is touched
-    //BUG: There's some strange 'unnamed' listviewitem error popping up, no idea why
-    //  It was happening with obsverablecollection too
+    //NOTE: this is being called multiple times when the datepicker is touched
 
-    //public ObservableCollection<Occupancy> ViewerOccupancies { get; set; }
     public List<Occupancy> ViewerOccupancies { get; set; }
 
     public RoomViewerViewModel()
     {
-        //ViewerOccupancies = new ObservableCollection<Occupancy>();
         ViewerOccupancies = new List<Occupancy>();
     }
 
     public List<Occupancy> LoadRoomsForSingleDate(DateTime selectedDate)
-    //public ObservableCollection<Occupancy> LoadRoomsForSingleDate(DateTime selectedDate)
     {
         using var context = new GeneralContext();
 

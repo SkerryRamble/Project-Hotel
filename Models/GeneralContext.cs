@@ -12,13 +12,10 @@ public class GeneralContext : DbContext
 {
     public GeneralContext() { }
     public GeneralContext(DbContextOptions<GeneralContext> options) : base(options) { }
-
     public DbSet<Booking> Bookings { get; set; }
     public DbSet<Room> Rooms { get; set; }
     public DbSet<Guest> Guests { get; set; }
-
     public DbSet<Occupancy> Occupancies { get; set; }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Occupancy>(entity =>

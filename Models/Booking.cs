@@ -11,7 +11,6 @@ public class Booking
     public int Id { get; set; }
     public int GuestId { get; set; }
     public int RoomId { get; set; }
-
     public DateTime Arrival { get; set; }
     public DateTime Departure { get; set; }
     public DateTime BookingDate { get; set; }
