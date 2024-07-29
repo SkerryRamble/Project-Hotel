@@ -9,8 +9,7 @@ namespace Project_Hotel;
 TODO:
 Add ? info popup for each tab
 break xaml into pages, and subsequent classes
-add method for confirm booking 
-    needs checks and validation etc
+Add temporal linearity date snaps to checkin checkout
 add method for cancel booking
     should be a simple, if exists then update status to cancelled and set room to available
     probably need a way to see past cancellations then
@@ -39,7 +38,7 @@ public partial class MainWindow : Window
     private void InitialiseBooker()
     {
         _occupancyViewModel = new OccupancyViewModel();
-        roomBookings_dg.DataContext = _occupancyViewModel;        
+        roomBookings_dg.DataContext = _occupancyViewModel;
         zoom_to_today();        //Snap the room occupancy date range to todays date
         LoadLists();
     }
@@ -141,27 +140,25 @@ public partial class MainWindow : Window
         _occupancyViewModel.LoadRoomsForDateRange(rfrom, rto);
     }
 
-    
-
     private void BookRoom()
     {
         //are dates valid
         //TODO: check dates make sense
-        if(!checkin_dp.SelectedDate.HasValue || !checkout_dp.SelectedDate.HasValue) { MessageBox.Show("Invalid dates"); return; }
+        if (!checkin_dp.SelectedDate.HasValue || !checkout_dp.SelectedDate.HasValue) { MessageBox.Show("Invalid dates"); return; }
         DateTime checkDateFrom = (DateTime)checkin_dp.SelectedDate;
         DateTime checkDateTo = (DateTime)checkout_dp.SelectedDate;
 
         //are guest details valid
-        if (first_name_tb.Text.Length == 0 || last_name_tb.Text.Length == 0) { MessageBox.Show("Guest Name invalid"); return;}
+        if (first_name_tb.Text.Length == 0 || last_name_tb.Text.Length == 0) { MessageBox.Show("Guest Name invalid"); return; }
         string firstName = first_name_tb.Text;
-        string lastName = last_name_tb.Text;   
+        string lastName = last_name_tb.Text;
 
         //is room selected
         if (room_cb.SelectedIndex < 0) { MessageBox.Show("No room selected"); return; }
-        int roomId = room_cb.SelectedIndex;
+        int roomId = (int)room_cb.SelectedValue;
 
         //Check room is free within dates selected
-        if(!IsRoomFreeWithinDateRange(checkDateFrom, checkDateTo)) { MessageBox.Show("Room not free for selected dates"); return; }
+        if (!IsRoomFreeWithinDateRange(checkDateFrom, checkDateTo, roomId)) { MessageBox.Show("Room not free for selected dates"); return; }
 
         //Create new guest record, return guestid
         int newGuestId = CreateNewGuest(firstName, lastName);
@@ -170,7 +167,7 @@ public partial class MainWindow : Window
         if (newGuestId < 0) { MessageBox.Show("Guest could not be added to database. Please try again"); return; }
 
         //Create new booking record, with guestid, roomid, dates
-        bool bookingSuccess = 
+        bool bookingSuccess =
             CreateNewBooking(newGuestId, roomId, checkDateFrom, checkDateTo, DateTime.Now, bookingStatus: BookingStatus.Occupied);
     }
 
@@ -209,14 +206,33 @@ public partial class MainWindow : Window
         return (newId > 0);
     }
 
-    private bool IsRoomFreeWithinDateRange(DateTime rfrom, DateTime rto)
+    private bool IsRoomFreeWithinDateRange(DateTime rfrom, DateTime rto, int roomId)
     {
+        using var context = new GeneralContext();
+
+        //set up a query that selects any rooms within dates
+        var results =
+            from booking in context.Bookings
+
+            where
+            ((booking.Arrival.Date >= rfrom && booking.Arrival.Date <= rto)
+            ||
+            //OR is the room boking departure within the range
+            (booking.Departure.Date >= rfrom && booking.Departure.Date <= rto))
+            &&
+            (booking.RoomId == roomId)
+            &&
+            (booking.Status == BookingStatus.Occupied)
+
+            select booking;
+
+        if (results.Count() == 0) return true;
 
         return false;
     }
 
     private void CancelCurrentBooking()
-    { 
+    {
         //Look up bookingid and set status to cancelled if it exists
     }
 
@@ -310,8 +326,8 @@ public partial class MainWindow : Window
     {
         //A little UI help
         if (roomBookings_dg.SelectedItem is null) return;
-       //TODO:can't check if item is not null, but empty?
-       //can happen if useraddrows is true, which it shouldn't be, but this is wpf...
+        //TODO:can't check if item is not null, but empty?
+        //can happen if useraddrows is true, which it shouldn't be, but this is wpf...
 
         Occupancy occ = (Occupancy)roomBookings_dg.SelectedItem;
         LoadGuestPanel(occ);
@@ -334,10 +350,10 @@ public partial class MainWindow : Window
         CancelCurrentBooking();
     }
 
-    
-    
 
-    
+
+
+
 
     #endregion
 
@@ -416,5 +432,5 @@ public partial class MainWindow : Window
 
     #endregion
 
-    
+
 }

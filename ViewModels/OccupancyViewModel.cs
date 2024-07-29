@@ -16,7 +16,7 @@ public class OccupancyViewModel
     //could possibly set up the loadrooms method to take either 1 or 2 dates and update its linq accordingly
     //not really necessary and silly for a real project, but interesting to do/show
 
-   
+       
     public void LoadRoomsForDateRange(DateTime rangeBegins, DateTime rangeEnds)
     {
         /*
