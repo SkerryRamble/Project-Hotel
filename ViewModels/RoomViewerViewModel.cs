@@ -30,8 +30,9 @@ public class RoomViewerViewModel
                     join room in context.Rooms on booking.RoomId equals room.Id
                     where                     
                     //Is the selecteddate within the booking dates
+                    //TODO: is the booking not cancelled
                     
-                    (booking.Arrival.Date <= selectedDate && booking.Departure.Date >= selectedDate)                        
+                    (booking.Arrival.Date <= selectedDate && booking.Departure.Date >= selectedDate)
 
                     select new Occupancy
                     {

@@ -145,12 +145,79 @@ public partial class MainWindow : Window
 
     private void BookRoom()
     {
+        //are dates valid
+        //TODO: check dates make sense
+        if(!checkin_dp.SelectedDate.HasValue || !checkout_dp.SelectedDate.HasValue) { MessageBox.Show("Invalid dates"); return; }
+        DateTime checkDateFrom = (DateTime)checkin_dp.SelectedDate;
+        DateTime checkDateTo = (DateTime)checkout_dp.SelectedDate;
 
+        //are guest details valid
+        if (first_name_tb.Text.Length == 0 || last_name_tb.Text.Length == 0) { MessageBox.Show("Guest Name invalid"); return;}
+        string firstName = first_name_tb.Text;
+        string lastName = last_name_tb.Text;   
+
+        //is room selected
+        if (room_cb.SelectedIndex < 0) { MessageBox.Show("No room selected"); return; }
+        int roomId = room_cb.SelectedIndex;
+
+        //Check room is free within dates selected
+        if(!IsRoomFreeWithinDateRange(checkDateFrom, checkDateTo)) { MessageBox.Show("Room not free for selected dates"); return; }
+
+        //Create new guest record, return guestid
+        int newGuestId = CreateNewGuest(firstName, lastName);
+
+        //pop out if guest couldnt be created
+        if (newGuestId < 0) { MessageBox.Show("Guest could not be added to database. Please try again"); return; }
+
+        //Create new booking record, with guestid, roomid, dates
+        bool bookingSuccess = 
+            CreateNewBooking(newGuestId, roomId, checkDateFrom, checkDateTo, DateTime.Now, bookingStatus: BookingStatus.Occupied);
+    }
+
+    private int CreateNewGuest(string firstName, string lastName)
+    {
+        Guest newGuest = new Guest();
+        newGuest.FirstName = firstName;
+        newGuest.LastName = lastName;
+
+        using var context = new GeneralContext();
+        context.Guests.Add(newGuest);
+        context.SaveChanges();
+
+        //id is already assigned at this point
+        int newId = newGuest.Id;
+
+        return newId;
+    }
+
+    private bool CreateNewBooking(int newGuestId, int roomId, DateTime arrival, DateTime departure, DateTime bookingDate, BookingStatus bookingStatus)
+    {
+        Booking newBooking = new Booking();
+        newBooking.GuestId = newGuestId;
+        newBooking.RoomId = roomId;
+        newBooking.Arrival = arrival;
+        newBooking.Departure = departure;
+        newBooking.BookingDate = bookingDate;
+        newBooking.Status = bookingStatus;
+
+        using var context = new GeneralContext();
+        context.Bookings.Add(newBooking);
+        context.SaveChanges();
+
+        int newId = newBooking.Id;
+
+        return (newId > 0);
+    }
+
+    private bool IsRoomFreeWithinDateRange(DateTime rfrom, DateTime rto)
+    {
+
+        return false;
     }
 
     private void CancelCurrentBooking()
     { 
-    
+        //Look up bookingid and set status to cancelled if it exists
     }
 
     private void ClearGuestPanel()
